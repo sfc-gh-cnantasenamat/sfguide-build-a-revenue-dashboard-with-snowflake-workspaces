@@ -28,65 +28,63 @@ A "Revenue Pulse" dashboard with four KPI scorecards, a 24-month trend, a varian
 
 ### Prerequisites
 - Access to a [Snowflake account](https://signup.snowflake.com/?utm_source=snowflake-devrel&utm_medium=developer-guides&utm_cta=developer-guides)
-- A role that can create databases, semantic views, agents, and roles (this guide uses `ACCOUNTADMIN`)
+- A role that can create databases, API integrations, semantic views, agents, and roles (this guide uses `ACCOUNTADMIN`)
 - Access to Workspaces dashboards and Snowflake CoWork in your account
 - A role with the `MANAGE ARTIFACT PUBLICATION` privilege, which is needed to publish dashboards to Snowflake CoWork
-- Python 3.10+ with `snowflake-connector-python`, and a named connection in your Snowflake connections config
-- The `cortex` CLI, used to deploy the agent and upload the dashboard file
-- A copy of the companion repository
+
+Everything in this guide runs in Snowsight. You don't need Python, a CLI, or a local copy of the code. The [companion repository](https://github.com/sfc-gh-cnantasenamat/build-a-revenue-dashboard-with-snowflake-workspaces) holds the SQL, the synthetic data, and the dashboard file, and Snowflake reads them directly from GitHub.
 
 ## Setup
 
-### Configure the Project
+### Connect Snowflake to the Companion Repository
 
-Clone the companion repository. Edit `config/demo.json` to point at your own account, database, warehouse, and connection. The deploy script refuses to run if the organization and account it connects to don't match `expected_organization` and `expected_account`, which keeps you from loading into the wrong account.
-
-```json
-{
-  "seed": 42,
-  "start_month": "2024-10-01",
-  "months": 24,
-  "reporting_cutoff": "2026-09-30",
-  "connection": "<your_connection>",
-  "expected_organization": "<YOUR_ORG>",
-  "expected_account": "<YOUR_ACCOUNT>",
-  "database": "REVENUE_PULSE_DB",
-  "schema": "DASHBOARD_DEMO",
-  "warehouse": "COMPUTE_WH",
-  "viewer_role": "DASHBOARD_DEMO_SALES_OPS",
-  "semantic_view": "REVENUE_SEMANTIC_VIEW",
-  "agent": "REVENUE_ADVISOR"
-}
-```
-
-The SQL files and the agent spec use fully qualified names. Replace `REVENUE_PULSE_DB` and `COMPUTE_WH` in the code below with your own values if they differ. The setup script creates `REVENUE_PULSE_DB` for you. Every object in this guide lives in that one database, so you can remove them all with one statement at the end.
-
-### Generate the Data
-
-The generator is deterministic (seed 42) and stores money as integer cents, so totals reconcile exactly. Run it, then run its unit tests:
-
-```bash
-python3 scripts/generate_data.py
-python3 -m unittest discover -s tests -v
-```
-
-This writes `data/customers.csv`, `data/products.csv`, and `data/revenue_monthly.csv`. Every revenue row carries a `RECORDED_DRIVER` value: `NORMAL_TRADING`, `RECORDED_RENEWAL_DELAY`, `RECORDED_CONTRACT_DOWNSIZE`, or `RECORDED_DISCOUNT_AND_SERVICE_CREDIT`. These stand in for reasons a sales-ops team logged against each account.
-
-## Load the Data
-
-### Create Tables and Stage
-
-`sql/01_setup.sql` creates a dedicated database for the guide. It is non-destructive and uses `IF NOT EXISTS` everywhere:
+In Snowsight, open **Projects > Workspaces**. In **My Workspace**, select **+ Add new > SQL File**. Set the role to `ACCOUNTADMIN` and the warehouse to `COMPUTE_WH`, then paste and run this script (it is also `sql/00_bootstrap.sql` in the repository):
 
 ```sql
--- Revenue Pulse demo objects. Non-destructive: IF NOT EXISTS everywhere.
--- A dedicated database holds everything, so sql/99_cleanup.sql can drop it in one statement.
+USE ROLE ACCOUNTADMIN;
+
 CREATE DATABASE IF NOT EXISTS REVENUE_PULSE_DB
   COMMENT = 'Revenue Pulse developer guide (synthetic data). Safe to drop after the guide.';
 
 CREATE SCHEMA IF NOT EXISTS REVENUE_PULSE_DB.DASHBOARD_DEMO
   COMMENT = 'Revenue Pulse Dashboards 2.0 demo (synthetic data)';
 
+CREATE API INTEGRATION IF NOT EXISTS REVENUE_PULSE_GIT_API
+  API_PROVIDER = git_https_api
+  API_ALLOWED_PREFIXES = ('https://github.com/sfc-gh-cnantasenamat/')
+  ENABLED = TRUE
+  COMMENT = 'Read access to the public Revenue Pulse companion repo';
+
+CREATE GIT REPOSITORY IF NOT EXISTS REVENUE_PULSE_DB.DASHBOARD_DEMO.REVENUE_PULSE_REPO
+  API_INTEGRATION = REVENUE_PULSE_GIT_API
+  ORIGIN = 'https://github.com/sfc-gh-cnantasenamat/build-a-revenue-dashboard-with-snowflake-workspaces.git';
+
+ALTER GIT REPOSITORY REVENUE_PULSE_DB.DASHBOARD_DEMO.REVENUE_PULSE_REPO FETCH;
+
+LS @REVENUE_PULSE_DB.DASHBOARD_DEMO.REVENUE_PULSE_REPO/branches/main/sql/;
+```
+
+The last statement lists the scripts in the repository. Every object in this guide lives in `REVENUE_PULSE_DB`, so you can remove them all with one statement at the end. The API integration and the viewer role sit outside the database and are dropped separately.
+
+If your warehouse isn't `COMPUTE_WH`, use your own warehouse in the SQL file. Later, instead of running `sql/03_agent.sql` and `sql/04_viewer_role.sql` from the repository, copy each one from the repository into your SQL file, replace `COMPUTE_WH` with your warehouse, and run it there.
+
+### About the Data
+
+The repository's `data/` folder holds three CSV files: `customers.csv`, `products.csv`, and `revenue_monthly.csv`. They were produced by a deterministic generator (seed 42) that stores money as integer cents, so totals reconcile exactly. Every revenue row carries a `RECORDED_DRIVER` value: `NORMAL_TRADING`, `RECORDED_RENEWAL_DELAY`, `RECORDED_CONTRACT_DOWNSIZE`, or `RECORDED_DISCOUNT_AND_SERVICE_CREDIT`. These stand in for reasons a sales-ops team logged against each account.
+
+## Load the Data
+
+### Run the Setup Script
+
+Run `sql/01_setup.sql` straight from the repository:
+
+```sql
+EXECUTE IMMEDIATE FROM @REVENUE_PULSE_DB.DASHBOARD_DEMO.REVENUE_PULSE_REPO/branches/main/sql/01_setup.sql;
+```
+
+The script creates the tables and an internal stage, copies the CSVs from the Git repository into the stage with `COPY FILES`, and loads each table with `COPY INTO ... MATCH_BY_COLUMN_NAME`. It truncates each table before loading, so rerunning it is safe:
+
+```sql
 CREATE TABLE IF NOT EXISTS REVENUE_PULSE_DB.DASHBOARD_DEMO.CUSTOMERS (
   CUSTOMER_ID VARCHAR NOT NULL PRIMARY KEY,
   CUSTOMER_NAME VARCHAR NOT NULL,
@@ -112,23 +110,48 @@ CREATE TABLE IF NOT EXISTS REVENUE_PULSE_DB.DASHBOARD_DEMO.REVENUE_MONTHLY (
   RECORDED_DRIVER VARCHAR NOT NULL
 ) COMMENT = 'Synthetic revenue at account x product x month grain';
 
-CREATE STAGE IF NOT EXISTS REVENUE_PULSE_DB.DASHBOARD_DEMO.LOAD_STAGE
-  FILE_FORMAT = (TYPE = CSV SKIP_HEADER = 1 FIELD_OPTIONALLY_ENCLOSED_BY = '"');
+-- The revenue CSV carries extra denormalized columns; MATCH_BY_COLUMN_NAME loads only the table's columns.
+CREATE OR REPLACE STAGE REVENUE_PULSE_DB.DASHBOARD_DEMO.LOAD_STAGE
+  FILE_FORMAT = (TYPE = CSV PARSE_HEADER = TRUE FIELD_OPTIONALLY_ENCLOSED_BY = '"'
+                 ERROR_ON_COLUMN_COUNT_MISMATCH = FALSE);
+
+-- Copy the committed CSVs from the Git repository into the internal stage.
+COPY FILES INTO @REVENUE_PULSE_DB.DASHBOARD_DEMO.LOAD_STAGE/
+  FROM @REVENUE_PULSE_DB.DASHBOARD_DEMO.REVENUE_PULSE_REPO/branches/main/data/
+  PATTERN = '.*[.]csv';
+
+TRUNCATE TABLE REVENUE_PULSE_DB.DASHBOARD_DEMO.CUSTOMERS;
+COPY INTO REVENUE_PULSE_DB.DASHBOARD_DEMO.CUSTOMERS
+  FROM @REVENUE_PULSE_DB.DASHBOARD_DEMO.LOAD_STAGE/customers.csv
+  MATCH_BY_COLUMN_NAME = CASE_INSENSITIVE FORCE = TRUE ON_ERROR = ABORT_STATEMENT;
+
+TRUNCATE TABLE REVENUE_PULSE_DB.DASHBOARD_DEMO.PRODUCTS;
+COPY INTO REVENUE_PULSE_DB.DASHBOARD_DEMO.PRODUCTS
+  FROM @REVENUE_PULSE_DB.DASHBOARD_DEMO.LOAD_STAGE/products.csv
+  MATCH_BY_COLUMN_NAME = CASE_INSENSITIVE FORCE = TRUE ON_ERROR = ABORT_STATEMENT;
+
+TRUNCATE TABLE REVENUE_PULSE_DB.DASHBOARD_DEMO.REVENUE_MONTHLY;
+COPY INTO REVENUE_PULSE_DB.DASHBOARD_DEMO.REVENUE_MONTHLY
+  FROM @REVENUE_PULSE_DB.DASHBOARD_DEMO.LOAD_STAGE/revenue_monthly.csv
+  MATCH_BY_COLUMN_NAME = CASE_INSENSITIVE FORCE = TRUE ON_ERROR = ABORT_STATEMENT;
+
+SELECT
+  (SELECT COUNT(*) FROM REVENUE_PULSE_DB.DASHBOARD_DEMO.CUSTOMERS) AS CUSTOMERS,
+  (SELECT COUNT(*) FROM REVENUE_PULSE_DB.DASHBOARD_DEMO.PRODUCTS) AS PRODUCTS,
+  (SELECT COUNT(*) FROM REVENUE_PULSE_DB.DASHBOARD_DEMO.REVENUE_MONTHLY) AS REVENUE_ROWS;
 ```
 
-### Run the Deploy Script
-
-`scripts/deploy.py` checks the account, runs the setup SQL, and loads each CSV. Each load runs PUT, then maps columns by header position, then TRUNCATE and COPY. Last, it creates the semantic view.
-
-```bash
-python3 scripts/deploy.py
-```
-
-You should see 54 rows in `CUSTOMERS`, 3 in `PRODUCTS`, and 3,888 in `REVENUE_MONTHLY`.
+The final query should return 54 `CUSTOMERS`, 3 `PRODUCTS`, and 3,888 `REVENUE_ROWS`.
 
 ## Create the Semantic View
 
-`sql/02_semantic_view.sql` (run by the deploy script) defines facts in USD, dimensions such as region, segment, and recorded driver, and metrics for net revenue, target, variance, attainment, and margin. Ratio metrics use `DIV0NULL` so an empty slice returns null instead of an error.
+Run `sql/02_semantic_view.sql` from the repository:
+
+```sql
+EXECUTE IMMEDIATE FROM @REVENUE_PULSE_DB.DASHBOARD_DEMO.REVENUE_PULSE_REPO/branches/main/sql/02_semantic_view.sql;
+```
+
+It defines facts in USD, dimensions such as region, segment, and recorded driver, and metrics for net revenue, target, variance, attainment, and margin. Ratio metrics use `DIV0NULL` so an empty slice returns null instead of an error.
 
 ```sql
 CREATE OR REPLACE SEMANTIC VIEW REVENUE_PULSE_DB.DASHBOARD_DEMO.REVENUE_SEMANTIC_VIEW
@@ -191,7 +214,7 @@ The `AI_SQL_GENERATION` clause tells Cortex Analyst what "Q3" and "last quarter"
 
 ### Agent Spec
 
-The Revenue Advisor agent has one Cortex Analyst tool over the semantic view. Its response instructions require it to separate recorded drivers from hypotheses and to quantify each contribution so the parts reconcile to the total.
+`sql/03_agent.sql` creates the agent with `CREATE AGENT ... FROM SPECIFICATION`, wrapping the spec below in `$$`. The Revenue Advisor agent has one Cortex Analyst tool over the semantic view. Its response instructions require it to separate recorded drivers from hypotheses and to quantify each contribution so the parts reconcile to the total.
 
 ```yaml
 models:
@@ -219,20 +242,23 @@ tool_resources:
     semantic_view: REVENUE_PULSE_DB.DASHBOARD_DEMO.REVENUE_SEMANTIC_VIEW
 ```
 
-### Deploy the Agent
+### Create the Agent
 
-The spec lives at `cortex_project/REVENUE_ADVISOR.agent.yaml`. The file path is resolved relative to the `cortex_project` folder:
+```sql
+EXECUTE IMMEDIATE FROM @REVENUE_PULSE_DB.DASHBOARD_DEMO.REVENUE_PULSE_REPO/branches/main/sql/03_agent.sql;
+```
 
-```bash
-cortex agent-studio agent-deploy --file-path REVENUE_ADVISOR.agent.yaml \
-  --fqn REVENUE_PULSE_DB.DASHBOARD_DEMO.REVENUE_ADVISOR --connection <your_connection>
+Then create the viewer role the dashboard is published to (covered in [Publish to a Role](#publish-to-a-role)):
+
+```sql
+EXECUTE IMMEDIATE FROM @REVENUE_PULSE_DB.DASHBOARD_DEMO.REVENUE_PULSE_REPO/branches/main/sql/04_viewer_role.sql;
 ```
 
 ## Build the Dashboard
 
 ### How the File Works
 
-A `.dash` file is JSON (spec version 2). It holds tiles (text, chart, or table), filters, a 12-column grid layout, and SQL datasources. `scripts/build_dashboard.py` generates it. The full script is in the companion repository. The key ideas are below.
+A `.dash` file is JSON (spec version 2). It holds tiles (text, chart, or table), filters, a 12-column grid layout, and SQL datasources. The repository includes a ready-made file, `dashboards/revenue_pulse.dash`, generated by `scripts/build_dashboard.py`. You don't need to run the script. The excerpts below show how the file is put together.
 
 Every datasource reads additive metrics from the semantic view at month, region, segment, and product grain. Filters are applied outside the view through `{{ filter('ID') }}` macros:
 
@@ -282,24 +308,20 @@ Filters are a date range defaulting to Q3 2026, plus multi-selects whose options
 
 The trend tile binds every filter except Period. That way the selected quarter is always shown against the full 24 months.
 
-### Generate, Check, and Upload
+### Open the Dashboard in a Git Workspace
 
-Build the file, then run every datasource query against your account. The check script renders the filter macros for three scenarios, checks the columns, and reconciles the totals:
+Create a workspace from the companion repository so the dashboard file appears in Workspaces:
 
-```bash
-python3 scripts/build_dashboard.py
-python3 tests/check_dashboard_sql.py
-```
+1. In **Workspaces**, select **+** (Create new workspace) at the top of the file tree, then select **Git workspace**.
+2. For **Repository URL**, paste `https://github.com/sfc-gh-cnantasenamat/build-a-revenue-dashboard-with-snowflake-workspaces`. The workspace name fills in from the URL.
+3. For **API integration**, select `REVENUE_PULSE_GIT_API`. The dialog may preselect a different integration, so check this field.
+4. Select **Public repository**, then select **Create**.
 
-The check script should print `ALL CHECKS PASSED`. Upload the file to your personal workspace:
-
-```bash
-cortex ws cp dashboards/revenue_pulse.dash 'USER$.PUBLIC.DEFAULT$:/revenue_pulse/' --connection <your_connection>
-```
+The new workspace contains every file in the repository. Open `dashboards/revenue_pulse.dash`. The dashboard toolbar shows its own role and warehouse. Set them to `ACCOUNTADMIN` and `COMPUTE_WH` if they differ.
 
 ## Explore with Filters
 
-In Snowsight, open **Workspaces**, refresh the file tree, and open `revenue_pulse/revenue_pulse.dash`. Select **Run all**.
+With the dashboard open, select **Run all**.
 
 With the default Q3 2026 period, the KPI row shows net revenue of **$7.4M**, up 7.9% year over year. Attainment is **92.4%**, which is **$603.6K behind target**, and gross margin is 71%. The trend line tracked target for 21 months, then fell below it in July. In the heatmap, one cell is red: **EMEA Enterprise at 58%**. Every other cell is at or above 100%.
 
@@ -322,7 +344,7 @@ Together these sum to the segment's −$778.7K gap. Clear the filters before you
 
 ### Create the Viewer Role
 
-`sql/03_viewer_role.sql` creates a read-only role with only the grants the dashboard and agent need. It does not grant the role to any user.
+`sql/04_viewer_role.sql`, which you ran earlier, creates a read-only role with only the grants the dashboard and agent need. It does not grant the role to any user.
 
 ```sql
 -- Dedicated viewer role for the Revenue Pulse demo. Read-only, least privilege.
@@ -356,7 +378,7 @@ Add **DASHBOARD_DEMO_SALES_OPS** with **Can view** access. When this guide was t
 
 A confirmation appears, and the toolbar button changes to **Publish changes**. Open **Share** again and check **Who has access**. During testing, `PUBLIC` was granted **Can view** on publish even though the dialog didn't show it beforehand. If `PUBLIC` is listed, select its trash icon so only the owner and **DASHBOARD_DEMO_SALES_OPS** remain.
 
-After publishing, make edits in the Workspaces editor and use **Publish changes** to push them. Don't re-upload a published file with `cortex ws cp`. During testing, overwriting the file this way detached it from its artifact.
+After publishing, make edits in the Workspaces editor and use **Publish changes** to push them.
 
 ## Ask Why in CoWork
 
@@ -392,17 +414,24 @@ For questions beyond what the tiles hold, open the Revenue Advisor agent in CoWo
 
 ## Clean Up
 
-Every guide object lives in `REVENUE_PULSE_DB`: the schema, tables, stage, semantic view, and agent. Dropping the database removes them all. The viewer role and the workspace file sit outside the database, so they are removed separately. No script runs this file. Run `sql/99_cleanup.sql` yourself when you finish. Before that, open the dashboard's **Share** dialog and remove every role from **Who has access**, then delete the artifact from CoWork (**Artifacts**, open it, **More options > Delete**). During testing, the CoWork delete returned an error. With every role removed, the artifact stays visible only to you.
+Remove the published dashboard and the workspace first:
+
+1. Open the dashboard's **Share** dialog and remove every role from **Who has access**.
+2. Delete the artifact from CoWork (**Artifacts**, open it, **More options > Delete**). During testing, the CoWork delete returned an error. With every role removed, the artifact stays visible only to you.
+3. In **Workspaces**, switch to the Git workspace, select **...** (More options) next to its name, select **Delete**, and confirm.
+
+Then run `sql/99_cleanup.sql`. Paste it into your SQL file rather than running it from the repository, because it drops the database that holds the Git repository object. Dropping `REVENUE_PULSE_DB` removes the schema, tables, stage, Git repository, semantic view, and agent. The script also drops the viewer role and the API integration, which sit outside the database. No script runs this file for you.
 
 ```sql
 -- Teardown for the Revenue Pulse guide. NOT run by any script; run it yourself at the end.
--- First remove the published artifact from the dashboard's Share > Publish as artifact dialog (or CoWork).
--- Every guide object (schema, tables, stage, semantic view, agent) lives in REVENUE_PULSE_DB,
--- so dropping the database removes them all. The role and workspace file live outside it.
+-- First remove every role from the dashboard's Share dialog and delete the artifact in CoWork,
+-- and delete the Git-synced workspace in Snowsight (... next to the workspace name > Delete).
+-- Every guide object (schema, tables, stage, Git repository, semantic view, agent) lives in
+-- REVENUE_PULSE_DB, so dropping the database removes them all. The role and API integration live outside it.
 USE ROLE ACCOUNTADMIN;
 DROP DATABASE IF EXISTS REVENUE_PULSE_DB;
 DROP ROLE IF EXISTS DASHBOARD_DEMO_SALES_OPS;
--- Workspace file: cortex ws rm 'USER$.PUBLIC.DEFAULT$:/revenue_pulse/revenue_pulse.dash' --connection <your_connection>
+DROP API INTEGRATION IF EXISTS REVENUE_PULSE_GIT_API;
 ```
 
 ## Conclusion And Resources
