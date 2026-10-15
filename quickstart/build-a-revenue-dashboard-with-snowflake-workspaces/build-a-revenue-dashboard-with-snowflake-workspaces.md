@@ -24,7 +24,7 @@ All data is synthetic: a fictional B2B software company with 54 accounts, 3 prod
 - How to ask follow-up questions about a dashboard in CoWork, and keep recorded drivers separate from hypotheses
 
 ### What You'll Build
-A "Revenue Pulse" dashboard with four KPI scorecards, a 24-month trend, a variance-by-region bar chart, a region-by-segment attainment heatmap, a recorded-driver chart, and an account table. Period, Region, Segment, and Product filters drive every tile.
+A "Revenue Pulse" dashboard in a single blue palette, with amber reserved for shortfalls. It has four KPI scorecards, a 24-month trend, a variance-by-region bar chart, a region-by-segment attainment heatmap, a recorded-driver chart, a variance waterfall from target to the total gap, an account bubble chart, and an account table. Period, Region, Segment, and Product filters drive every tile.
 
 ### Prerequisites
 - Access to a [Snowflake account](https://signup.snowflake.com/?utm_source=snowflake-devrel&utm_medium=developer-guides&utm_cta=developer-guides)
@@ -308,6 +308,19 @@ Filters are a date range defaulting to Q3 2026, plus multi-selects whose options
 
 The trend tile binds every filter except Period. That way the selected quarter is always shown against the full 24 months.
 
+Every chart takes its colours from a handful of palette constants: navy, blue, and sky for normal values, and amber only where the business falls short. The heatmap's color scale is fitted to the data. On-target cells sit in a narrow band around 103%, so the blue ramp spans 100% to 103.5%, which makes small differences visible. Anything below 100% fades to amber:
+
+```python
+"scale": {"domain": [0.55, 1, 1.02, 1.035],
+          "range": [AMBER, MIST, SKY, NAVY], "clamp": True, "interpolate": "rgb"}
+```
+
+The waterfall's SQL does the stacking, so the Vega-Lite spec only draws floating bars from `START_VALUE` to `END_VALUE`. A running window sum walks through each recorded driver's variance, and a final row closes on the total gap:
+
+```sql
+SUM(V) OVER (ORDER BY V DESC ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) AS END_VALUE
+```
+
 ### Open the Dashboard in a Git Workspace
 
 Create a workspace from the companion repository so the dashboard file appears in Workspaces:
@@ -323,7 +336,7 @@ The new workspace contains every file in the repository. Open `dashboards/revenu
 
 With the dashboard open, select **Run all**.
 
-With the default Q3 2026 period, the KPI row shows net revenue of **$7.4M**, up 7.9% year over year. Attainment is **92.4%**, which is **$603.6K behind target**, and gross margin is 71%. The trend line tracked target for 21 months, then fell below it in July. In the heatmap, one cell is red: **EMEA Enterprise at 58%**. Every other cell is at or above 100%.
+With the default Q3 2026 period, the KPI row shows net revenue of **$7.4M**, up 7.9% year over year. Attainment is **92.4%**, which is **$603.6K behind target**, and gross margin is 71%. The trend line tracked target for 21 months, then fell below it in July. In the heatmap, every cell is a shade of blue except one amber cell: **EMEA Enterprise at 57.9%**. Every other cell is between 102.5% and 103.2%. The variance waterfall starts at target and walks to the total gap. Normal trading adds $185.8K, and discounts and credits, contract downsize, and renewal delay take it down to **−$603.6K**. In the bubble chart, 49 of the 54 accounts sit on or just above the dashed 100% line. The five below it are all EMEA Enterprise accounts with large targets, and one of them is at 0%.
 
 Set **Region = EMEA**. Every tile re-queries: net revenue is $1.9M, attainment 71%, and variance −$755.5K.
 
