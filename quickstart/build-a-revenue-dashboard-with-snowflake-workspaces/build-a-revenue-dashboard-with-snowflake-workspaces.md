@@ -12,7 +12,7 @@ fork repo link: https://github.com/sfc-gh-cnantasenamat/build-a-revenue-dashboar
 
 ## Overview
 
-An analyst already has a revenue semantic view and a Cortex Agent that the sales team uses. What's missing is a shared view the team checks every morning. In this guide you build that view as a native [Workspaces dashboard](https://docs.snowflake.com/en/LIMITEDACCESS/cowork-dashboards) (a `.dash` file) on the semantic view, publish it to a sales-ops role, and then open it in Snowflake CoWork and ask follow-up "why" questions about the numbers.
+An analyst already has a revenue semantic view and a Cortex Agent that the sales team uses. What's missing is a shared view the team checks every morning. In this guide you build that view as a native [Workspaces dashboard](https://docs.snowflake.com/en/LIMITEDACCESS/cowork-dashboards) (a `.dash` file) on the semantic view, publish it to a sales-ops role as an artifact, and then open it in Snowflake CoWork and ask follow-up "why" questions about the numbers.
 
 All data is synthetic: a fictional B2B software company with 54 accounts, 3 product lines, and 24 months of revenue through September 30, 2026. The data contains a story. Q3 2026 net revenue is barely up (0.8%) year over year and $1.09M behind target. EMEA Enterprise is the largest single miss, and APAC is behind too.
 
