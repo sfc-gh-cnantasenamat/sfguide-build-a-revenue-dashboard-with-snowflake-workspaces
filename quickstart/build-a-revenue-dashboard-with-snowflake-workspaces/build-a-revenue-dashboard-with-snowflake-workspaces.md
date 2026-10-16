@@ -434,7 +434,7 @@ CoWork opens a chat with the dashboard docked beside it. It answers from the das
 
 ![CoWork follow-up chat with the dashboard docked](assets/cowork-follow-up.jpg)
 
-The chat runs on the left, and the dashboard stays docked on the right, so you can check the answer against the tiles. The screenshot shows a shorter version of the question, "Why is EMEA Enterprise so far below target this quarter?" The answer starts with the same numbers the heatmap shows: 57.9% of target, about $1.60M of net revenue against a $2.76M target, and a −$778.7K shortfall. It then notes that this one cell makes up nearly the entire EMEA miss of −$779.1K, and breaks the gap down by account in a table.
+The chat runs on the left, and the dashboard stays docked on the right, so you can check the answer against the tiles. The answer starts with the same numbers the heatmap shows: $1.07M of net revenue against a $1.85M target, a −$778.7K shortfall at 57.9% attainment. It then breaks the gap down by the driver sales ops recorded: a renewal delay at one account that booked $0 (≈ −$348.7K), contract downsizes at two accounts (≈ −$258.7K), discounts and service credits at two more (≈ −$182.0K), offset slightly by the one account above target (≈ +$10.7K).
 
 Verified against SQL, the expected answer is:
 
