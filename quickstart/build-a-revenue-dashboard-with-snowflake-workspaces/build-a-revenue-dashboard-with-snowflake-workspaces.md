@@ -387,15 +387,17 @@ Together these sum to the segment's −$778.7K gap. Chart clicks appear as filte
 
 ### Chart Actions
 
-You can also filter by clicking the charts themselves. Drag across a range of months on the trend chart to zoom in. Every other tile re-queries for just that slice of time:
+You can also filter by clicking the charts themselves.
+
+**1. Brush a time range.** Drag across a range of months on the trend chart to zoom in. Every other tile re-queries for just that slice of time:
 
 ![Brushing a time range on the trend chart re-renders every other tile for that slice](assets/chart-action-brush-trend.gif)
 
-Click a bar in **Variance to Target by Region** to filter the rest of the dashboard to that region:
+**2. Click a bar.** Click a bar in **Variance to Target by Region** to filter the rest of the dashboard to that region:
 
 ![Clicking a region bar updates the heatmap, waterfall, and account tiles](assets/chart-action-click-bar.gif)
 
-Click a cell in the heatmap to focus on that region and segment combination:
+**3. Click a heatmap cell.** Click a cell in the heatmap to focus on that region and segment combination:
 
 ![Clicking a heatmap cell filters the other tiles to that region and segment](assets/chart-action-click-heatmap.gif)
 
