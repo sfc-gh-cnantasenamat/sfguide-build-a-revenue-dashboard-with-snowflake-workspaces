@@ -424,7 +424,7 @@ The artifact opens with the same filter chips and KPI tiles you built in Workspa
 
 ### Ask a Follow-up Question
 
-In the follow-up box, ask:
+Publishing saved the dashboard as an artifact, so you can ask follow-up questions about the data it shows. Each follow-up starts a new conversation that carries the artifact's data and context, and it stays private to you ([Artifacts in Snowflake CoWork](https://docs.snowflake.com/en/user-guide/snowflake-cortex/snowflake-cowork/artifacts)). In the follow-up box, ask:
 
 ```text
 Why is EMEA Enterprise behind target in Q3 2026? Quantify the drivers.
