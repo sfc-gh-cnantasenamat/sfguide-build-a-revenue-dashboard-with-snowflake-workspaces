@@ -357,6 +357,8 @@ Set **Region = EMEA**, or click the EMEA bar in **Variance to Target by Region**
 
 ![Dashboard filtered to the EMEA region](assets/filter-region-emea.jpg)
 
+The **Region** chip in the filter bar now reads **EMEA**, and the KPI row has re-queried for that region alone. Net revenue is $1.8M, down 18.2% year over year. Attainment fell to 70.1%, down from 86.3% for all regions. Variance to target is −$779K, while gross margin holds at 71.3%. Below the KPIs, the trend chart redraws on an EMEA scale: net revenue stays close to target until it drops sharply in July.
+
 Add **Segment = Enterprise** and look at the account table. One account has zero revenue in the quarter, and four others are well under target. The drivers chart shows what sales ops recorded for EMEA Enterprise in Q3:
 
 | Recorded driver | Variance |
@@ -404,6 +406,8 @@ Add **DASHBOARD_DEMO_SALES_OPS** with **Can view** access. When this guide was t
 
 ![Publish as artifact dialog with the sales-ops role added](assets/publish-as-artifact.jpg)
 
+The blue box at the top restates the security model: each viewer runs the dashboard with their own role's permissions. Under **Who has access**, your user is listed as **Owner**, and **DASHBOARD_DEMO_SALES_OPS** has **Can view**. Nothing is shared until you select **Publish**.
+
 A confirmation appears, and the toolbar button changes to **Publish changes**. Open **Share** again and check **Who has access**. During testing, `PUBLIC` was granted **Can view** on publish even though the dialog didn't show it beforehand. If `PUBLIC` is listed, select its trash icon so only the owner and **DASHBOARD_DEMO_SALES_OPS** remain.
 
 After publishing, make edits in the Workspaces editor and use **Publish changes** to push them.
@@ -416,6 +420,8 @@ In Snowflake CoWork, open **Artifacts**, select the **All** tab, and open **Reve
 
 ![Revenue Pulse opened from CoWork Artifacts](assets/cowork-artifact.jpg)
 
+The artifact opens with the same filter chips and KPI tiles you built in Workspaces, running on the default Q3 2026 period: $6.9M net revenue at 86.3% of target. The header shows when the artifact was last refreshed and has an **Open in workspace** link back to the source. The **Ask a follow-up about this dashboard** box sits at the bottom of the page.
+
 ### Ask a Follow-up Question
 
 In the follow-up box, ask:
@@ -427,6 +433,8 @@ Why is EMEA Enterprise behind target in Q3 2026? Quantify the drivers.
 CoWork opens a chat with the dashboard docked beside it. It answers from the dashboard's executed tile results: the heatmap and account table datasources.
 
 ![CoWork follow-up chat with the dashboard docked](assets/cowork-follow-up.jpg)
+
+The chat runs on the left, and the dashboard stays docked on the right, so you can check the answer against the tiles. The screenshot shows a shorter version of the question, "Why is EMEA Enterprise so far below target this quarter?" The answer starts with the same numbers the heatmap shows: 57.9% of target, about $1.60M of net revenue against a $2.76M target, and a −$778.7K shortfall. It then notes that this one cell makes up nearly the entire EMEA miss of −$779.1K, and breaks the gap down by account in a table.
 
 Verified against SQL, the expected answer is:
 
