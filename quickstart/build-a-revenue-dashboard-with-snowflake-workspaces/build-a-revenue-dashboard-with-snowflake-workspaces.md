@@ -12,6 +12,8 @@ fork repo link: https://github.com/sfc-gh-cnantasenamat/build-a-revenue-dashboar
 
 ## Overview
 
+Many data teams keep metric definitions in one tool, an AI assistant in another, and dashboards in a third BI tool. Each one ends up with its own copy of the logic, so the numbers drift apart and nobody knows which one to trust. This guide shows how to keep all three in one place in Snowflake: one governed semantic view that feeds both a Cortex Agent and a dashboard, published and explored in Snowflake CoWork. Nothing is copied into an external BI tool.
+
 An analyst already has a revenue [semantic view](https://docs.snowflake.com/en/user-guide/views-semantic/overview) and a [Cortex Agent](https://docs.snowflake.com/en/user-guide/snowflake-cortex/cortex-agents) that the sales team uses. The semantic view defines the revenue metrics (such as net revenue, target, and attainment), the dimensions to slice them by, and how the underlying tables join, so every query uses the same definitions. The Cortex Agent is an AI assistant that answers plain-language questions by turning them into SQL against that semantic view. What's missing is a shared view that the team checks every morning. In this guide, you use [Dashboards 2.0](https://docs.snowflake.com/en/LIMITEDACCESS/cowork-dashboards) to build that view as a native Workspaces dashboard (a `.dash` file) on the semantic view, publish it to a sales-ops role as an artifact, and then open it in [Snowflake CoWork](https://docs.snowflake.com/en/user-guide/snowflake-cortex/snowflake-cowork) and ask follow-up "why" questions about the numbers.
 
 All data is synthetic: a fictional B2B software company with 54 accounts, 3 product lines, and 24 months of revenue through September 30, 2026. The data contains a story. Q3 2026 net revenue is barely up (0.8%) year over year and $1.09M behind target. EMEA Enterprise is the largest single miss, and APAC is behind too.
@@ -477,7 +479,7 @@ DROP API INTEGRATION IF EXISTS REVENUE_PULSE_GIT_API;
 
 ## Conclusion And Resources
 
-Congratulations! You've successfully built a native Workspaces dashboard on a governed semantic view, published it to a single least-privilege role, and asked why the numbers moved from CoWork. Every tile queries the same semantic view the agent uses, so the dashboard and the agent report the same numbers.
+Congratulations! You've successfully built a native Workspaces dashboard on a governed semantic view, published it to a single least-privilege role, and asked why the numbers moved from CoWork. The semantic layer, the agent, and the dashboard now live together in Snowflake. Every tile queries the same semantic view the agent uses, so the dashboard and the agent report the same numbers, under the same governance, without a separate BI tool to keep in sync.
 
 ### What You Learned
 - Keep semantic view metrics additive and compute ratios after aggregation, so filtered totals stay correct
