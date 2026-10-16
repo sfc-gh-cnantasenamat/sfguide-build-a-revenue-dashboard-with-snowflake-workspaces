@@ -39,7 +39,22 @@ A morning revenue check fits that last description, so this guide uses a dashboa
 - How to ask follow-up questions about a dashboard in CoWork, and keep recorded drivers separate from hypotheses
 
 ### What You'll Build
-A "Revenue Pulse" dashboard coloured with the Turbo scheme: red for shortfalls, blue for beating target. It has a header, four KPI scorecards, a 24-month trend, a variance-by-region bar chart, a region-by-segment attainment heatmap, a recorded-driver chart, a variance waterfall from target to the total gap, an account bubble chart, an Ask Revenue Advisor prompt tile, and an account table. Period, Region, Segment, and Product filters drive the tiles. Clicking the charts cross-filters the dashboard: drag across months on the trend, click a region bar to filter by region, or click a heatmap cell.
+A "Revenue Pulse" dashboard coloured with the Turbo scheme: red for shortfalls, blue for beating target. It contains:
+
+- A header and four KPI scorecards
+- A 24-month trend chart
+- A variance-by-region bar chart and a region-by-segment attainment heatmap
+- A recorded-driver chart and a variance waterfall from target to the total gap
+- An account bubble chart and an account table
+- An Ask Revenue Advisor prompt tile
+
+Period, Region, Segment, and Product filters drive the tiles. Clicking the charts also cross-filters the dashboard:
+
+- Drag across months on the trend chart.
+- Click a region bar to filter by region.
+- Click a heatmap cell to filter by region and segment.
+
+![Architecture: the Git repo and setup script feed a semantic view that both the Cortex Agent and the dashboard query; the dashboard is published to a role and explored in CoWork](assets/architecture.png)
 
 ### Prerequisites
 - Access to a [Snowflake account](https://signup.snowflake.com/?utm_source=snowflake-devrel&utm_medium=developer-guides&utm_cta=developer-guides)

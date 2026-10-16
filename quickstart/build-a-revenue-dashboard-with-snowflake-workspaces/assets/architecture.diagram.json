@@ -1,0 +1,40 @@
+{
+  "width": 1440,
+  "height": 850,
+  "scale": 2,
+  "elements": [
+    {"type":"text","id":"title","x":40,"y":25,"text":"Overview of Architecture and Workflow of Revenue Pulse","font_size":30},
+    {"type":"zone","id":"build_zone","x":25,"y":90,"width":1370,"height":350,"style":"app","text":"Build  |  Snowflake Workspaces  |  Developer defines metrics once","color":"#5b21b6"},
+    {"type":"zone","id":"use_zone","x":25,"y":500,"width":1370,"height":250,"style":"service","text":"Consume  |  Snowflake CoWork  |  Sales-ops viewer explores and asks why","color":"#1d4ed8"},
+
+    {"type":"box","id":"repo","x":45,"y":210,"width":260,"height":120,"style":"input","font_size":20,"text_lines":[
+      [{"text":"The companion Git repo"}],[{"text":"holds the setup SQL"}],[{"text":"and the "},{"text":".dash","code":true},{"text":" file."}]]},
+    {"type":"box","id":"tables","x":355,"y":210,"width":270,"height":120,"style":"data","font_size":20,"text_lines":[
+      [{"text":"The setup script loads"}],[{"text":"synthetic revenue tables"}],[{"text":"into "},{"text":"DASHBOARD_DEMO","code":true},{"text":"."}]]},
+    {"type":"box","id":"sv","x":685,"y":140,"width":300,"height":270,"style":"process","font_size":20,"text_lines":[
+      [{"text":"The semantic view"}],[{"text":"REVENUE_SEMANTIC_VIEW","code":true}],[{"text":"defines net revenue,"}],[{"text":"target, and attainment"}],[{"text":"once for every consumer."}]]},
+    {"type":"box","id":"agent","x":1065,"y":140,"width":310,"height":130,"style":"process","font_size":20,"text_lines":[
+      [{"text":"The Cortex Agent"}],[{"text":"REVENUE_ADVISOR","code":true}],[{"text":"answers questions"}],[{"text":"in plain language."}]]},
+    {"type":"box","id":"dash","x":1065,"y":300,"width":310,"height":110,"style":"output","font_size":20,"text_lines":[
+      [{"text":"The "},{"text":".dash","code":true},{"text":" dashboard renders"}],[{"text":"KPIs and charts that"}],[{"text":"cross-filter on click."}]]},
+
+    {"type":"box","id":"publish","x":1035,"y":575,"width":340,"height":120,"style":"check","font_size":20,"text_lines":[
+      [{"text":"You publish the dashboard"}],[{"text":"as an artifact to the role"}],[{"text":"DASHBOARD_DEMO_SALES_OPS","code":true},{"text":"."}]]},
+    {"type":"box","id":"viewer","x":560,"y":575,"width":380,"height":120,"style":"output","font_size":20,"text":"A sales-ops viewer opens the\nartifact in CoWork and clicks\ncharts to filter the tiles."},
+    {"type":"box","id":"ask","x":45,"y":575,"width":420,"height":120,"style":"process","font_size":20,"text_lines":[
+      [{"text":"The viewer asks \"why?\" and"}],[{"text":"REVENUE_ADVISOR","code":true},{"text":" answers from"}],[{"text":"the same semantic view."}]]},
+
+    {"type":"arrow","id":"repo_tables","points":[[315,270],[345,270]]},
+    {"type":"arrow","id":"tables_sv","points":[[635,270],[675,270]]},
+    {"type":"arrow","id":"agent_sv","points":[[1055,195],[995,195]],"dashed":true,"color":"#0e7490"},
+    {"type":"arrow","id":"dash_sv","points":[[1055,355],[995,355]],"dashed":true,"color":"#0e7490"},
+    {"type":"arrow","id":"dash_publish","points":[[1220,420],[1220,565]]},
+    {"type":"arrow","id":"publish_viewer","points":[[1025,635],[950,635]]},
+    {"type":"arrow","id":"viewer_ask","points":[[550,635],[475,635]]},
+
+    {"type":"line","id":"legend_solid","points":[[380,800],[445,800]]},
+    {"type":"text","id":"legend_flow","x":465,"y":789,"font_size":19,"text":"Workflow step"},
+    {"type":"line","id":"legend_dashed","points":[[720,800],[785,800]],"dashed":true,"color":"#0e7490"},
+    {"type":"text","id":"legend_data","x":805,"y":789,"font_size":19,"text":"Queries the semantic view"}
+  ]
+}
