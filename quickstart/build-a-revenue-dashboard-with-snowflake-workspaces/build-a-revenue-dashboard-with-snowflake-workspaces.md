@@ -39,20 +39,13 @@ A morning revenue check fits that last description, so this guide uses a dashboa
 - How to ask follow-up questions about a dashboard in CoWork, and keep recorded drivers separate from hypotheses
 
 ### What You'll Build
-A "Revenue Pulse" dashboard coloured with the Turbo scheme: red for shortfalls, blue for beating target. It contains:
+An end-to-end revenue workflow in which every number comes from one definition:
 
-- A header and four KPI scorecards
-- A 24-month trend chart
-- A variance-by-region bar chart and a region-by-segment attainment heatmap
-- A recorded-driver chart and a variance waterfall from target to the total gap
-- An account bubble chart and an account table
-- An Ask Revenue Advisor prompt tile
-
-Period, Region, Segment, and Product filters drive the tiles. Clicking the charts also cross-filters the dashboard:
-
-- Drag across months on the trend chart.
-- Click a region bar to filter by region.
-- Click a heatmap cell to filter by region and segment.
+- **A semantic view** (`REVENUE_SEMANTIC_VIEW`) that defines net revenue, target, variance, and attainment once, on top of synthetic revenue tables.
+- **A Cortex Agent** (`REVENUE_ADVISOR`) that answers plain-language revenue questions by querying that semantic view.
+- **A "Revenue Pulse" dashboard**, built as a `.dash` file in Snowflake Workspaces, that queries the same semantic view. It shows KPIs, trends, and variance breakdowns on one page, and you can filter it or click its charts to cross-filter.
+- **A shared artifact**: you publish the dashboard as an artifact and share it with a sales-ops role, so anyone in that role can open it.
+- **A CoWork chat session** where a viewer opens the dashboard and asks follow-up "why" questions. The agent answers from the same semantic view, so the chat and the dashboard agree.
 
 ![Architecture: the Git repo and setup script feed a semantic view that both the Cortex Agent and the dashboard query; the dashboard is published to a role and explored in CoWork](assets/architecture.png)
 
