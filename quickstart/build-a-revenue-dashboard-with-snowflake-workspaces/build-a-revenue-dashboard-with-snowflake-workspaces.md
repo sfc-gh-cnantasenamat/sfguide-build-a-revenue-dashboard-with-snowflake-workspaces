@@ -21,7 +21,7 @@ All data is synthetic: a fictional B2B software company with 54 accounts, 3 prod
 ### When to Use Dashboards 2.0
 Snowflake gives you several ways to present data, and each fits a different job. HTML reports suit one-off narrative analyses that are snapshots. Streamlit and App Runtime are for interactive tools and production apps, and they take more code to build and maintain. Dashboards 2.0 sits in between. It is built for recurring KPI monitoring on live, governed queries, with filters, drilldown, and conversational follow-up, at a low build cost. A morning revenue check fits that description, so this guide uses a dashboard.
 
-![Comparison of HTML reports, Dashboards 2.0, Streamlit, and App Runtime by best use case, data behavior, interactivity, and build effort](assets/when-to-use-what.png)
+![HTML reports, Dashboards 2.0, Streamlit, and App Runtime positioned by build effort and interactivity](assets/when-to-use-what.png)
 
 ### What You'll Learn
 - How to model revenue, targets, and margin as a semantic view with additive metrics
