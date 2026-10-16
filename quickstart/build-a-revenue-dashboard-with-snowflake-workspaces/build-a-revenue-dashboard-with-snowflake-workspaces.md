@@ -21,7 +21,13 @@ An analyst already has a revenue [semantic view](https://docs.snowflake.com/en/u
 All data is synthetic: a fictional B2B software company with 54 accounts, 3 product lines, and 24 months of revenue through September 30, 2026. The data contains a story. Q3 2026 net revenue is barely up (0.8%) year over year and $1.09M behind target. EMEA Enterprise is the largest single miss, and APAC is behind too.
 
 ### When to Use Dashboards 2.0
-Snowflake gives you several ways to present data, and each fits a different job. HTML reports suit one-off narrative analyses that are snapshots. Streamlit and App Runtime are for interactive tools and production apps, and they take more code to build and maintain. Dashboards 2.0 sits in between. It is built for recurring KPI monitoring on live, governed queries, with filters, drilldown, and conversational follow-up, at a low build cost. A morning revenue check fits that description, so this guide uses a dashboard.
+Snowflake gives you several ways to present data, and each fits a different job:
+
+- **HTML reports** suit one-off narrative analyses that are snapshots.
+- **Streamlit** and **App Runtime** are for interactive tools and production apps, and they take more code to build and maintain.
+- **Dashboards 2.0** sits in between. It is built for recurring KPI monitoring on live, governed queries, with filters, drilldown, and conversational follow-up, at a low build cost.
+
+A morning revenue check fits that last description, so this guide uses a dashboard.
 
 ![HTML reports, Dashboards 2.0, Streamlit, and App Runtime positioned by build effort and interactivity](assets/when-to-use-what.png)
 
