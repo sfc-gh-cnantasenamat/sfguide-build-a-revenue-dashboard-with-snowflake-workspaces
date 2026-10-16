@@ -33,7 +33,7 @@ Snowflake gives you several ways to present data, and each fits a different job.
 - How to ask follow-up questions about a dashboard in CoWork, and keep recorded drivers separate from hypotheses
 
 ### What You'll Build
-A "Revenue Pulse" dashboard coloured with the Turbo scheme: red for shortfalls, blue for beating target. It has a header, four KPI scorecards, a 24-month trend, a variance-by-region bar chart, a region-by-segment attainment heatmap, a recorded-driver chart, a variance waterfall from target to the total gap, an account bubble chart, an Ask Revenue Advisor prompt tile, and an account table. Period, Region, Segment, and Product filters drive the tiles. Clicking the charts cross-filters the dashboard: drag across months on the trend, click a region bar to drill from region to segment to account, or click a heatmap cell.
+A "Revenue Pulse" dashboard coloured with the Turbo scheme: red for shortfalls, blue for beating target. It has a header, four KPI scorecards, a 24-month trend, a variance-by-region bar chart, a region-by-segment attainment heatmap, a recorded-driver chart, a variance waterfall from target to the total gap, an account bubble chart, an Ask Revenue Advisor prompt tile, and an account table. Period, Region, Segment, and Product filters drive the tiles. Clicking the charts cross-filters the dashboard: drag across months on the trend, click a region bar to filter by region, or click a heatmap cell.
 
 ### Prerequisites
 - Access to a [Snowflake account](https://signup.snowflake.com/?utm_source=snowflake-devrel&utm_medium=developer-guides&utm_cta=developer-guides)
@@ -385,7 +385,7 @@ You can also filter by clicking the charts themselves. Drag across a range of mo
 
 ![Brushing a time range on the trend chart re-renders every other tile for that slice](assets/chart-action-brush-trend.gif)
 
-Click a bar in **Variance to Target by Region** to filter the rest of the dashboard to that region. Click again to drill from region to segment to account:
+Click a bar in **Variance to Target by Region** to filter the rest of the dashboard to that region:
 
 ![Clicking a region bar updates the heatmap, waterfall, and account tiles](assets/chart-action-click-bar.gif)
 
