@@ -377,6 +377,20 @@ Add **Segment = Enterprise** and look at the account table. One account has zero
 
 Together these sum to the segment's −$778.7K gap. Chart clicks appear as filter chips (**Drill: region path**, **Months picked on trend**); clear a chip to drill back up. Clear the filters before you publish.
 
+### Chart Actions
+
+You can also filter by clicking the charts themselves. Drag across a range of months on the trend chart to zoom in. Every other tile re-queries for just that slice of time:
+
+![Brushing a time range on the trend chart re-renders every other tile for that slice](assets/chart-action-brush-trend.gif)
+
+Click a bar in **Variance to Target by Region** to filter the rest of the dashboard to that region. Click again to drill from region to segment to account:
+
+![Clicking a region bar updates the heatmap, waterfall, and account tiles](assets/chart-action-click-bar.gif)
+
+Click a cell in the heatmap to focus on that region and segment combination:
+
+![Clicking a heatmap cell filters the other tiles to that region and segment](assets/chart-action-click-heatmap.gif)
+
 ## Publish to a Role
 
 ### Create the Viewer Role
